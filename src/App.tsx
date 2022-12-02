@@ -38,16 +38,23 @@ function App() {
   };
 
   const start = () => {
-    let result = input[input.length - 1];
+    let result = getLast(input);
     conditions
       .filter(({ src }) => Boolean(src))
       .forEach(({ src, target }) => {
-        result = result.replace(new RegExp(src, 'ig'), target);
+        const withSlash = src
+          .split('')
+          .map((s) => `\\${s}`)
+          .join('');
+        const reg = new RegExp(withSlash, 'ig');
+        console.log(withSlash);
+        console.log(reg);
+        result = result.replace(reg, target);
       });
     setOutput(result);
   };
   const addDoubleQuote = () => {
-    const result = input[input.length - 1]
+    const result = getLast(input)
       .split(/\r|\n/)
       .map((item) => `"${item}"`)
       .join('\r\n');
@@ -56,12 +63,12 @@ function App() {
   };
 
   const removeSpace = () => {
-    const result = input[input.length - 1].replace(/\s+/g, '');
+    const result = getLast(input).replace(/\s+/g, '');
     setOutput(result);
   };
 
   const lowerCase = () => {
-    const result = input[input.length - 1].toLowerCase();
+    const result = getLast(input).toLowerCase();
     setOutput(result);
   };
 
