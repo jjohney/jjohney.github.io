@@ -21,7 +21,8 @@ export const Conditions: FC<ConditionsProps> = ({
     onConditionsChange([...conditions, { src: '', target: '' }]);
   };
   const removeCondition = (index: number) => {
-    const newConditions = conditions.slice().splice(index, 1);
+    const newConditions = conditions.slice();
+    newConditions.splice(index, 1);
     onConditionsChange(newConditions);
   };
 
