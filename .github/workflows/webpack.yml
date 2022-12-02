@@ -26,9 +26,3 @@ jobs:
         run: |
           npm install
           npm run build
-
-      - name: Artifact
-        uses: actions/upload-pages-artifact@v1
-
-      - name: Deploy
-        uses: actions/deploy-pages@v1
