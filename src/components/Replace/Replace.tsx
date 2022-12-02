@@ -2,7 +2,7 @@ import { FC, useState } from "react";
 
 import { Stack, TextField } from "@mui/material";
 
-import { Condition } from "../../App";
+import { Condition } from "../Conditions";
 
 type ReplaceProps = {
   src: string;
@@ -20,6 +20,7 @@ export const Replace: FC<ReplaceProps> = (props) => {
         value={src}
         variant="standard"
         label="Replace"
+        helperText="Input only one character here"
         onChange={(e) => {
           setSrc(e.target.value);
           props.onChange({

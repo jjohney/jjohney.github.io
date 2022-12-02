@@ -1,12 +1,16 @@
 import "./App.css";
 
 import { useState } from "react";
+import removeAccents from "remove-accents";
 
+import { CopyAll } from "@mui/icons-material";
 import MenuIcon from "@mui/icons-material/Menu";
 import {
+  Alert,
   AppBar,
   Button,
   CssBaseline,
+  Divider,
   IconButton,
   Stack,
   TextField,
@@ -15,39 +19,30 @@ import {
 } from "@mui/material";
 import { Container } from "@mui/system";
 
-import { Replace } from "./components/Replace";
+import { Condition, Conditions } from "./components/Conditions";
+import { getLast } from "./utils/array";
 
-const isLast = (index: number, input: any[]) => index === input.length - 1;
-const getLast = (input: any[]) => input[input.length - 1];
-
-export type Condition = {
-  src: string;
-  target: string;
-};
 function App() {
-  const [input, setInput] = useState<string[]>(['']);
+  const originInput = localStorage.getItem('originInput') || '';
+  const [input, setInput] = useState<string[]>([originInput]);
   const [output, setOutput] = useState('');
   const [conditions, setConditions] = useState<Condition[]>([
     { src: '', target: '' },
   ]);
-  const addCondition = () => {
-    setConditions((prev) => [...prev, { src: '', target: '' }]);
-  };
-  const removeCondition = (index: number) => {
-    setConditions((prev) => {
-      prev.splice(index, 1);
-      return [...prev];
-    });
+
+  const onInputChange = (e: any, index: number) => {
+    updateInput(e.target.value, index);
+    if (index === 0) {
+      localStorage.setItem('originInput', e.target.value);
+    }
   };
 
   const start = () => {
     let result = input[input.length - 1];
-    console.log(result, conditions);
     conditions
       .filter(({ src }) => Boolean(src))
       .forEach(({ src, target }) => {
         result = result.replace(new RegExp(src, 'ig'), target);
-        console.log(result);
       });
     setOutput(result);
   };
@@ -60,17 +55,8 @@ function App() {
     setOutput(result);
   };
 
-  const onConditionChange = (condition: Condition, index: number) => {
-    const newConditions = conditions.slice();
-    newConditions[index] = condition;
-    setConditions(newConditions);
-  };
-
   const removeSpace = () => {
-    const result = input[input.length - 1]
-      .split(/[\r\n]+/)
-      .join(',')
-      .replace(/\s+/g, '');
+    const result = input[input.length - 1].replace(/\s+/g, '');
     setOutput(result);
   };
 
@@ -79,12 +65,24 @@ function App() {
     setOutput(result);
   };
 
+  const joinWithComma = () => {
+    const result = getLast(input)
+      .split(/[\r\n]+/)
+      .join(',');
+    setOutput(result);
+  };
+
+  const removeNonEnglishChars = () => {
+    const result = removeAccents(getLast(input));
+    setOutput(result);
+  };
   const addInput = () => {
     setInput((prev) => [...prev, output]);
   };
 
   const removeInput = (index: number) => {
-    const newInput = input.slice().splice(index, 1);
+    const newInput = input.slice();
+    newInput.splice(index, 1);
     setInput(newInput);
   };
 
@@ -92,11 +90,17 @@ function App() {
     input[index] = value;
     setInput([...input]);
   };
+
+  const copyResult = () => {
+    navigator.clipboard.writeText(output);
+  };
+
   return (
     <>
       <CssBaseline />
+
       <Container>
-        <AppBar position="static">
+        <AppBar position="absolute">
           <Toolbar>
             <IconButton
               size="large"
@@ -110,13 +114,18 @@ function App() {
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
               String handler
             </Typography>
-            <Button color="inherit">Login</Button>
           </Toolbar>
         </AppBar>
-        <Stack spacing={2}>
+        <Alert className="mt-8">
+          This is a step by step tool for replacing characters in your input
+          string. Every time you modify the input, the result will show in the
+          bottom text input. If you wanna go on replacing from the result, click
+          the Continue from result button, and make further replacements.
+        </Alert>
+        <Stack spacing={2} className="mt-8">
           <Stack spacing={2}>
             {input.map((_input, index) => {
-              const label = index === 0 ? 'Input your string' : null;
+              const label = index === 0 ? 'Input your string' : _input.length;
               return (
                 <Stack key={index} spacing={1}>
                   <TextField
@@ -126,9 +135,7 @@ function App() {
                     multiline
                     rows={10}
                     value={_input}
-                    onChange={(e) => {
-                      updateInput(e.target.value, index);
-                    }}
+                    onChange={(e) => onInputChange(e, index)}
                   />
                   {index === input.length - 1 && index !== 0 ? (
                     <Button
@@ -146,8 +153,14 @@ function App() {
           </Stack>
 
           <Stack direction="row" spacing={2}>
+            <Button variant="contained" onClick={removeNonEnglishChars}>
+              remove accents
+            </Button>
             <Button variant="contained" onClick={addDoubleQuote}>
               double quote
+            </Button>
+            <Button variant="contained" onClick={joinWithComma}>
+              join with comma
             </Button>
             <Button variant="contained" onClick={removeSpace}>
               remove space
@@ -161,41 +174,23 @@ function App() {
             </Button>
           </Stack>
 
-          <Stack spacing={2}>
-            <Button
-              variant="contained"
-              onClick={addCondition}
-              className="self-start"
-            >
-              add condition
+          <Divider />
+          {/* Conditions */}
+          <Conditions
+            conditions={conditions}
+            onConditionsChange={setConditions}
+          />
+          <Divider />
+          <Stack direction="row" justifyContent={'space-between'}>
+            <Button variant="contained" color="success" onClick={start}>
+              start
             </Button>
-            {conditions.map(({ src, target }, index) => (
-              <div key={index} className="flex">
-                <Replace
-                  src={src}
-                  target={target}
-                  onChange={(condition: Condition) => {
-                    onConditionChange(condition, index);
-                  }}
-                />
-                <Button
-                  size="small"
-                  variant="contained"
-                  color="warning"
-                  onClick={(e) => removeCondition(index)}
-                >
-                  remove
-                </Button>
-              </div>
-            ))}
+            <Button variant="contained" color="info" onClick={addInput}>
+              continue from result
+            </Button>
           </Stack>
 
-          <div>
-            <Button onClick={start}>start</Button>
-            <Button onClick={addInput}>continue</Button>
-          </div>
-
-          <Stack>
+          <Stack spacing={2}>
             <TextField
               label="Result"
               disabled
@@ -203,6 +198,14 @@ function App() {
               value={output}
               rows={10}
             />
+            <Button
+              variant="outlined"
+              color="success"
+              onClick={copyResult}
+              startIcon={<CopyAll />}
+            >
+              copy result
+            </Button>
           </Stack>
         </Stack>
       </Container>
