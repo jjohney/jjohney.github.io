@@ -96,7 +96,7 @@ function App() {
     <>
       <CssBaseline />
       <Container>
-        <AppBar position="absolute">
+        <AppBar position="static">
           <Toolbar>
             <IconButton
               size="large"
